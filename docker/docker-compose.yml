@@ -1,0 +1,68 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: myapify-postgres
+    environment:
+      POSTGRES_DB: myapify
+      POSTGRES_USER: myapify
+      POSTGRES_PASSWORD: myapify123
+    ports:
+      - "4240:5432"
+    volumes:
+      - myapify_pg:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myapify"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: myapify-redis
+    ports:
+      - "4250:6379"
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    container_name: myapify-backend
+    ports:
+      - "4280:4280"
+    environment:
+      DATABASE_URL: postgresql://myapify:myapify123@postgres:5432/myapify
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: myapify-jwt-secret-change-in-production-64chars
+      DOCKER_SOCKET: /var/run/docker.sock
+      ACTOR_DATA_DIR: /tmp/myapify-runs
+      API_BASE_URL: http://myapify-backend:4280
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - myapify_runs:/tmp/myapify-runs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: myapify-nginx
+    ports:
+      - "4200:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  myapify_pg:
+  myapify_runs:
