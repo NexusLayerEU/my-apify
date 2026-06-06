@@ -1,13 +1,16 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Code2, Play, Database, Settings, LogOut, Zap } from 'lucide-react';
+import { LayoutDashboard, Code2, Play, Database, Settings, LogOut, Zap, Clock, Key, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../auth';
 
 const NAV = [
-    { to: '/',         label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/actors',   label: 'Actors',    icon: Code2 },
-    { to: '/runs',     label: 'Runs',      icon: Play },
-    { to: '/datasets', label: 'Datasets',  icon: Database },
-    { to: '/settings', label: 'Settings',  icon: Settings },
+    { to: '/',           label: 'Dashboard',  icon: LayoutDashboard },
+    { to: '/actors',     label: 'Actors',     icon: Code2 },
+    { to: '/runs',       label: 'Runs',       icon: Play },
+    { to: '/datasets',   label: 'Datasets',   icon: Database },
+    { to: '/schedules',  label: 'Schedules',  icon: Clock },
+    { to: '/kv',         label: 'KV Store',   icon: Key },
+    { to: '/marketplace',label: 'Marketplace',icon: ShoppingBag },
+    { to: '/settings',   label: 'Settings',   icon: Settings },
 ];
 
 export default function Layout() {

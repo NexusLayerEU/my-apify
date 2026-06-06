@@ -5,16 +5,21 @@ const path    = require('path');
 const { migrate } = require('./db');
 const { startWorker } = require('./services/queue');
 const { processRun }  = require('./services/runner');
+const { loadAndScheduleAll } = require('./services/scheduler');
+const { seedTemplates } = require('./services/templates');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-app.use('/api/auth',     require('./routes/auth'));
-app.use('/api/actors',   require('./routes/actors'));
-app.use('/api/runs',     require('./routes/runs'));
-app.use('/api/datasets', require('./routes/datasets'));
-app.use('/api/stats',    require('./routes/stats'));
+app.use('/api/auth',        require('./routes/auth'));
+app.use('/api/actors',      require('./routes/actors'));
+app.use('/api/runs',        require('./routes/runs'));
+app.use('/api/datasets',    require('./routes/datasets'));
+app.use('/api/stats',       require('./routes/stats'));
+app.use('/api/schedules',   require('./routes/schedules'));
+app.use('/api/kv',          require('./routes/kv'));
+app.use('/api/marketplace', require('./routes/marketplace'));
 
 // Serve frontend in production
 const distPath = path.join(__dirname, '../../frontend/dist');
@@ -47,6 +52,12 @@ async function start() {
         console.log('[Queue] Worker started');
     } catch (err) {
         console.warn('[Queue] Worker skipped (Redis not available):', err.message);
+    }
+    try {
+        await seedTemplates();
+        await loadAndScheduleAll();
+    } catch (err) {
+        console.warn('[Scheduler] Skipped:', err.message);
     }
     app.listen(PORT, () => console.log(`MyApify API running on port ${PORT}`));
 }

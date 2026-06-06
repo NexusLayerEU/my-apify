@@ -4,6 +4,7 @@ const path = require('path');
 const os = require('os');
 const { pool } = require('../db');
 const { appendLog, broadcastDone } = require('./logStream');
+const { fireWebhook } = require('./webhook');
 
 const docker = new Docker({ socketPath: process.env.DOCKER_SOCKET || '/var/run/docker.sock' });
 
@@ -130,11 +131,24 @@ async function processRun(runId) {
 async function finishRun(runId, status, exitCode, errMsg) {
     if (errMsg) await appendLog(runId, 'ERROR', errMsg);
     await appendLog(runId, 'INFO', `--- Run ${status} ---`);
-    await pool.query(
-        "UPDATE runs SET status=$1, exit_code=$2, finished_at=NOW() WHERE id=$3",
+    const { rows } = await pool.query(
+        "UPDATE runs SET status=$1, exit_code=$2, finished_at=NOW() WHERE id=$3 RETURNING actor_id, output_dataset_id",
         [status, exitCode, runId]
     );
     broadcastDone(runId, status);
+
+    // Fire actor webhook if configured
+    if (rows.length) {
+        const { rows: actor } = await pool.query(
+            'SELECT webhook_url FROM actors WHERE id=$1', [rows[0].actor_id]
+        );
+        if (actor.length && actor[0].webhook_url) {
+            await fireWebhook(actor[0].webhook_url, {
+                event: 'run.finished', runId, status, exitCode,
+                datasetId: rows[0].output_dataset_id,
+            });
+        }
+    }
 }
 
 module.exports = { processRun };

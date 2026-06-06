@@ -45,13 +45,14 @@ export default function ActorEditor() {
     const nav = useNavigate();
     const isNew = id === 'new';
 
-    const [name, setName]       = useState('');
-    const [desc, setDesc]       = useState('');
-    const [runtime, setRuntime] = useState('python3');
-    const [code, setCode]       = useState(STARTER.python3);
-    const [reqs, setReqs]       = useState('');
-    const [saving, setSaving]   = useState(false);
-    const [savedId, setSavedId] = useState<string | null>(null);
+    const [name, setName]           = useState('');
+    const [desc, setDesc]           = useState('');
+    const [runtime, setRuntime]     = useState('python3');
+    const [code, setCode]           = useState(STARTER.python3);
+    const [reqs, setReqs]           = useState('');
+    const [webhook, setWebhook]     = useState('');
+    const [saving, setSaving]       = useState(false);
+    const [savedId, setSavedId]     = useState<string | null>(null);
 
     useEffect(() => {
         if (!isNew && id) {
@@ -59,7 +60,8 @@ export default function ActorEditor() {
                 const a = r.data;
                 setName(a.name); setDesc(a.description);
                 setRuntime(a.runtime); setCode(a.source_code);
-                setReqs(a.requirements); setSavedId(a.id);
+                setReqs(a.requirements); setWebhook(a.webhook_url || '');
+                setSavedId(a.id);
             });
         }
     }, [id, isNew]);
@@ -74,7 +76,7 @@ export default function ActorEditor() {
     const save = async (): Promise<string> => {
         setSaving(true);
         try {
-            const payload = { name, description: desc, runtime, source_code: code, requirements: reqs };
+            const payload = { name, description: desc, runtime, source_code: code, requirements: reqs, webhook_url: webhook };
             if (isNew && !savedId) {
                 const { data } = await api.post('/actors', payload);
                 setSavedId(data.id);
@@ -142,6 +144,9 @@ export default function ActorEditor() {
                     className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500" />
                 <input value={reqs} onChange={e => setReqs(e.target.value)}
                     placeholder={runtime === 'python3' ? 'requirements.txt (e.g. requests==2.32.0)' : 'npm packages (e.g. axios cheerio)'}
+                    className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500" />
+                <input value={webhook} onChange={e => setWebhook(e.target.value)}
+                    placeholder="Webhook URL on completion (optional)"
                     className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-300 placeholder-gray-500 focus:outline-none focus:border-orange-500" />
             </div>
         </div>

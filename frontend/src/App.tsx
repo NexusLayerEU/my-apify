@@ -8,6 +8,9 @@ import ActorEditor from './pages/ActorEditor';
 import Runs        from './pages/Runs';
 import RunDetail   from './pages/RunDetail';
 import Datasets    from './pages/Datasets';
+import Schedules   from './pages/Schedules';
+import KVStore     from './pages/KVStore';
+import Marketplace from './pages/Marketplace';
 import Settings    from './pages/Settings';
 
 function Protected({ children }: { children: React.ReactNode }) {
@@ -30,6 +33,9 @@ export default function App() {
                         <Route path="runs/:id" element={<RunDetail />} />
                         <Route path="datasets" element={<Datasets />} />
                         <Route path="datasets/:id" element={<Datasets />} />
+                        <Route path="schedules" element={<Schedules />} />
+                        <Route path="kv" element={<KVStore />} />
+                        <Route path="marketplace" element={<Marketplace />} />
                         <Route path="settings" element={<Settings />} />
                     </Route>
                 </Routes>
